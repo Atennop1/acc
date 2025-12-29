@@ -1,0 +1,45 @@
+BasedOnStyle: LLVM
+
+Language: C
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+# braces: classic K&R
+BreakBeforeBraces: Attach
+BraceWrapping:
+  AfterFunction: false
+  AfterControlStatement: false
+  AfterStruct: false
+  AfterEnum: false
+  AfterUnion: false
+
+# keep things compact
+AllowShortIfStatementsOnASingleLine: true
+AllowShortLoopsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortBlocksOnASingleLine: Always
+
+# don’t over-wrap
+ColumnLimit: 100
+BreakBeforeBinaryOperators: None
+BreakBeforeTernaryOperators: false
+
+# no fake alignment
+AlignAfterOpenBracket: DontAlign
+AlignOperands: false
+AlignTrailingComments: false
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+
+# pointer style: C, not C++
+PointerAlignment: Right
+
+# function calls stay readable
+BinPackArguments: true
+BinPackParameters: true
+
+# don’t invent new lines
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+

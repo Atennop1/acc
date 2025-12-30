@@ -1,18 +1,12 @@
-#include <libgen.h>
+#include "lexer.h"
+#include "list.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 char *get_basename_without_ext(const char *path) {
     const char *last_slash = strrchr(path, '/');
-    const char *last_backslash = strrchr(path, '\\');
-
-    const char *filename_start = path;
-    if (last_slash != NULL && last_slash > last_backslash) {
-        filename_start = last_slash + 1;
-    } else if (last_backslash != NULL) {
-        filename_start = last_backslash + 1;
-    }
+    const char *filename_start = last_slash + 1;
 
     char *basename = strdup(filename_start);
     if (basename == NULL) { return NULL; }
@@ -29,6 +23,7 @@ int main(int argc, char **argv) {
     int until_codegen = 0;
     char *source_file_path = NULL;
 
+    // parsing command line arguments
     int current_argument_idx = 1;
     while (current_argument_idx < argc) {
         char *argument = argv[current_argument_idx];
@@ -83,6 +78,7 @@ int main(int argc, char **argv) {
     char command[512];
     int status_code = 0;
 
+    // preprocessing source file
     snprintf(command, sizeof(command), "gcc -E -P %s -o preprocessed.i", source_file_path);
     status_code = system(command);
     if (status_code != 0) {
@@ -92,22 +88,65 @@ int main(int argc, char **argv) {
 
     printf("Preprocessed.\n");
 
-    // here is where compiler will live, stubbing with GCC for now
-    status_code = system("gcc -S preprocessed.i -o assembly.s");
-    if (status_code != 0) {
-        fprintf(stderr, "Something went wrong on the compilation step: %d.\n", status_code);
+    // tokenizing preprocessed file
+    list_t tokens_list = list_create(128);
+    if (lex("preprocessed.i", &tokens_list) != 0) {
+        fprintf(stderr, "Lexing failed.\n");
         return 1;
     }
+
+    // outputting tokens (for testing)
+    for (int i = 0; i < tokens_list.count; i++) {
+        token_t *t = (token_t *)list_get(&tokens_list, i);
+        printf("%s %d\n", t->value, t->type);
+    }
+
     status_code = system("rm preprocessed.i");
     if (status_code != 0) {
         fprintf(stderr, "Something went wrong on %s deletion: %d.\n", "preprocessed.i", status_code);
         return 1;
     }
 
+    printf("Lexed.\n");
+    if (until_lexer) {
+        printf("Stopping here because --lex was provided.\n");
+        return 0;
+    }
+
+    // parsing tokens (in the future)
+    // ...
+
+    printf("Parsed.\n");
+    if (until_parser) {
+        printf("Stopping here because --parse was provided.\n");
+        return 0;
+    }
+
+    // generating assembly (in the future)
+    // ...
+    printf("Generated code.\n");
+    if (until_codegen) {
+        printf("Stopping here because --codegen was provided.\n");
+        return 0;
+    }
+
+    // emitting code (in the future)
+    // ...
+
+    // freeing resources
+    for (int i = 0; i < tokens_list.count; i++) {
+        token_t *t = (token_t *)list_get(&tokens_list, i);
+        free(t->value);
+        free(t);
+    }
+
     printf("Compiled.\n");
 
+    // linking assembly
     source_file_path = get_basename_without_ext(source_file_path);
     snprintf(command, sizeof(command), "gcc assembly.s -o %s", source_file_path);
+    free(source_file_path);
+
     status_code = system(command);
     if (status_code != 0) {
         fprintf(stderr, "Something went wrong on the linking step: %d.\n", status_code);

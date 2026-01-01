@@ -21,7 +21,7 @@ AllowShortFunctionsOnASingleLine: Inline
 AllowShortBlocksOnASingleLine: Always
 
 # don’t over-wrap
-ColumnLimit: 130
+ColumnLimit: 0
 BreakBeforeBinaryOperators: None
 BreakBeforeTernaryOperators: false
 

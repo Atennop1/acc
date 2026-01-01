@@ -113,7 +113,7 @@ int lex(const char *source_file_path, list_t *output) {
                 return -1;
             }
 
-            if (match.rm_so == 0 && match.rm_eo - match.rm_so > max_token_length) {
+            if (match.rm_so == 0 && match.rm_eo - match.rm_so >= max_token_length) {
                 max_token_length = match.rm_eo - match.rm_so;
                 best_token_index = i;
             }

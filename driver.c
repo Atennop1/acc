@@ -1,5 +1,6 @@
 #include "lexer.h"
 #include "list.h"
+#include "parser.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -98,7 +99,7 @@ int main(int argc, char **argv) {
     // outputting tokens (for testing)
     for (int i = 0; i < tokens_list.count; i++) {
         token_t *t = (token_t *)list_get(&tokens_list, i);
-        printf("%s %d\n", t->value, t->type);
+        printf("%s\t%d\n", t->value, t->type);
     }
 
     status_code = system("rm preprocessed.i");
@@ -114,7 +115,16 @@ int main(int argc, char **argv) {
     }
 
     // parsing tokens (in the future)
-    // ...
+    program_node_t *program_node = malloc(sizeof(program_node_t));
+    if (program_node == NULL) {
+        fprintf(stderr, "main: Failed to allocate memory.\n");
+        return 1;
+    }
+
+    if (parse(&tokens_list, program_node) != 0) {
+        fprintf(stderr, "Parsing failed.\n");
+        return 1;
+    }
 
     printf("Parsed.\n");
     if (until_parser) {

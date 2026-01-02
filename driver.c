@@ -1,3 +1,4 @@
+#include "generator.h"
 #include "lexer.h"
 #include "list.h"
 #include "parser.h"
@@ -114,14 +115,14 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    // parsing tokens (in the future)
-    program_node_t *program_node = malloc(sizeof(program_node_t));
-    if (program_node == NULL) {
+    // parsing tokens
+    ast_program_node_t *ast_program_node = malloc(sizeof(ast_program_node_t));
+    if (ast_program_node == NULL) {
         fprintf(stderr, "main: Failed to allocate memory.\n");
         return 1;
     }
 
-    if (parse(&tokens_list, program_node) != 0) {
+    if (parse(&tokens_list, ast_program_node) != 0) {
         fprintf(stderr, "Parsing failed.\n");
         return 1;
     }
@@ -132,9 +133,19 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    // generating assembly (in the future)
-    // ...
-    printf("Generated code.\n");
+    // generating intermediate representation
+    ir_program_node_t *ir_program_node = malloc(sizeof(ir_program_node_t));
+    if (ast_program_node == NULL) {
+        fprintf(stderr, "main: Failed to allocate memory.\n");
+        return 1;
+    }
+
+    if (generate(ast_program_node, ir_program_node) != 0) {
+        fprintf(stderr, "Generating IR failed.\n");
+        return 1;
+    }
+
+    printf("Generated IR.\n");
     if (until_codegen) {
         printf("Stopping here because --codegen was provided.\n");
         return 0;

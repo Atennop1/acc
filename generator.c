@@ -3,20 +3,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int create_register(ir_operand_node_t *result) {
-    result = malloc(sizeof(ir_operand_node_t));
-    if (result == NULL) {
+int create_register(ir_operand_node_t **result) {
+    (*result) = malloc(sizeof(ir_operand_node_t));
+    if ((*result) == NULL) {
         fprintf(stderr, "generate: failed to allocate memory\n");
         return -1;
     }
 
-    result->type = IR_OPERAND_REGISTER;
+    (*result)->type = IR_OPERAND_REGISTER;
     return 0;
 }
 
 int immediate_from_expression(ast_expression_node_t *expression, ir_operand_node_t **result) {
     *result = malloc(sizeof(ir_operand_node_t));
-    if (result == NULL) {
+    if ((*result) == NULL) {
         fprintf(stderr, "generate: failed to allocate memory\n");
         return -1;
     }
@@ -36,7 +36,7 @@ int instructions_from_statement(ast_statement_node_t *statement, list_t *result)
         return -1;
     }
 
-    if (create_register(mov->data.mov.right) != 0) {
+    if (create_register(&mov->data.mov.right) != 0) {
         fprintf(stderr, "Failed to create register.\n");
         return -1;
     }

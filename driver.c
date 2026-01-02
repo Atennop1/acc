@@ -1,3 +1,4 @@
+#include "emitter.h"
 #include "generator.h"
 #include "lexer.h"
 #include "list.h"
@@ -7,10 +8,7 @@
 #include <string.h>
 
 char *get_basename_without_ext(const char *path) {
-    const char *last_slash = strrchr(path, '/');
-    const char *filename_start = last_slash + 1;
-
-    char *basename = strdup(filename_start);
+    char *basename = strdup(path);
     if (basename == NULL) { return NULL; }
 
     char *last_dot = strrchr(basename, '.');
@@ -23,7 +21,10 @@ int main(int argc, char **argv) {
     int until_lexer = 0;
     int until_parser = 0;
     int until_codegen = 0;
+
+    int do_emit = 0;
     char *source_file_path = NULL;
+    char *output_file_path = NULL;
 
     // parsing command line arguments
     int current_argument_idx = 1;
@@ -45,6 +46,18 @@ int main(int argc, char **argv) {
         if (strcmp(argument, "--codegen") == 0 || strcmp(argument, "-c") == 0) {
             until_codegen = 1;
             current_argument_idx++;
+            continue;
+        }
+
+        if (strcmp(argument, "-S") == 0) {
+            do_emit = 1;
+            current_argument_idx++;
+            continue;
+        }
+
+        if (strcmp(argument, "-o") == 0) {
+            output_file_path = argv[current_argument_idx + 1];
+            current_argument_idx += 2;
             continue;
         }
 
@@ -73,7 +86,7 @@ int main(int argc, char **argv) {
     }
 
     if ((until_lexer + until_parser + until_codegen) > 1) {
-        fprintf(stderr, "Ambigous: can stop either after lexer, parser, or code generator.\n");
+        fprintf(stderr, "Ambigous: can stop either after lexer, parser, code generator, or emitter.\n");
         return 1;
     }
 
@@ -95,12 +108,6 @@ int main(int argc, char **argv) {
     if (lex("preprocessed.i", &tokens_list) != 0) {
         fprintf(stderr, "Lexing failed.\n");
         return 1;
-    }
-
-    // outputting tokens (for testing)
-    for (int i = 0; i < tokens_list.count; i++) {
-        token_t *t = (token_t *)list_get(&tokens_list, i);
-        printf("%s\t%d\n", t->value, t->type);
     }
 
     status_code = system("rm preprocessed.i");
@@ -151,8 +158,13 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    // emitting code (in the future)
-    // ...
+    // emitting code
+    if (emit("assembly.s", ir_program_node) != 0) {
+        fprintf(stderr, "Code emission failed.\n");
+        return 1;
+    }
+
+    printf("Code emitted.\n");
 
     // freeing resources
     for (int i = 0; i < tokens_list.count; i++) {
@@ -161,22 +173,27 @@ int main(int argc, char **argv) {
         free(t);
     }
 
-    printf("Compiled.\n");
-
     // linking assembly
-    source_file_path = get_basename_without_ext(source_file_path);
-    snprintf(command, sizeof(command), "gcc assembly.s -o %s", source_file_path);
-    free(source_file_path);
+    if (output_file_path == NULL) {
+        source_file_path = get_basename_without_ext(source_file_path);
+        snprintf(command, sizeof(command), "gcc assembly.s -o %s", source_file_path);
+        free(source_file_path);
+    } else {
+        snprintf(command, sizeof(command), "gcc assembly.s -o %s", output_file_path);
+    }
 
     status_code = system(command);
     if (status_code != 0) {
         fprintf(stderr, "Something went wrong on the linking step: %d.\n", status_code);
         return 1;
     }
-    status_code = system("rm assembly.s");
-    if (status_code != 0) {
-        fprintf(stderr, "Something went wrong on %s deletion: %d.\n", "assembly.s", status_code);
-        return 1;
+
+    if (!do_emit) {
+        status_code = system("rm assembly.s");
+        if (status_code != 0) {
+            fprintf(stderr, "Something went wrong on %s deletion: %d.\n", "assembly.s", status_code);
+            return 1;
+        }
     }
 
     printf("Linked.\n");
